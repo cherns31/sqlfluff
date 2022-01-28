@@ -1123,7 +1123,15 @@ class FromExpressionElementSegment(BaseSegment):
     """A table expression."""
 
     type = "from_expression_element"
-    match_grammar = Sequence(
+    match_grammar = StartsWith(
+        OneOf(
+            Ref("PreTableFunctionKeywordsGrammar", optional=True),
+            OptionallyBracketed(Ref("TableExpressionSegment")),
+        ),
+        terminator=Ref("JoinClauseSegment")
+    )
+
+    parse_grammar = Sequence(
         Ref("PreTableFunctionKeywordsGrammar", optional=True),
         OptionallyBracketed(Ref("TableExpressionSegment")),
         # https://cloud.google.com/bigquery/docs/reference/standard-sql/arrays#flattening_arrays
@@ -1363,7 +1371,7 @@ class JoinClauseSegment(BaseSegment):
         # tab1.col1 = tab2.col1
         OneOf(
             "CROSS",
-            "INNER",
+            Sequence(Ref.keyword("NATURAL", optional=True), "INNER"),
             Sequence(
                 OneOf(
                     "FULL",
